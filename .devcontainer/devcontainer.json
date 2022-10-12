@@ -1,0 +1,44 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/docker-existing-dockerfile
+{
+	"name": "WebServer",
+
+	// Sets the run context to one level up instead of the .devcontainer folder.
+	"context": "..",
+
+	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+	"dockerFile": "../Dockerfile",
+
+	"customizations": {
+		"vscode": {
+		  "extensions": [
+			"xdebug.php-debug",
+			"xdebug.php-pack"
+		]
+		}
+	  },
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [80,8080],
+
+	// Uncomment the next line to run commands after the container is created - for example installing curl.
+	// "postCreateCommand": "apt-get update && apt-get install -y curl",
+	//	/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
+	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+
+	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
+	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+	"source=${localWorkspaceFolder}/src,target=/var/www,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/config/nginx.conf,target=/etc/nginx/nginx.conf,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/webserver.conf,target=/etc/nginx/conf.d/webserver.conf,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/config/fpm-pool.conf,target=/etc/php/8.1/fpm/pool.d/www.conf,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/config/php.ini,target=/etc/php/8.1/conf.d/custom.ini,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/config/supervisord.conf,target=/etc/supervisor/conf.d/supervisord.conf,type=bind,consistency=cached",
+	"source=${localWorkspaceFolder}/../GphotoDeamon/build/GphotoDeamon,target=/usr/bin/gphotodeamon,type=bind,consistency=consistent",
+
+],
+	// Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode"
+}
+gphto
