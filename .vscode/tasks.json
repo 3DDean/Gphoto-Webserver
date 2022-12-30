@@ -1,0 +1,48 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "start php-fpm",
+			"type": "shell",
+			"command": "php-fpm8.1",
+			"isBackground": true
+		},
+		{
+			"label": "start nginx",
+			"type": "shell",
+			"command": "nginx",
+			"isBackground": true,
+			"dependsOn": [
+				"start php-fpm"
+			]
+		},
+		{
+			"label": "start nginx",
+			"type": "shell",
+			"command": "nginx",
+			"isBackground": true,
+			"dependsOn": [
+				"start php-fpm"
+			]
+		},
+		{
+			"label": "restart php-fpm",
+			"type": "shell",
+			"command": "service php8.1-fpm restart",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "restart nginx",
+			"type": "shell",
+			"command": "service nginx restart",
+			"isBackground": false,
+			"dependsOn": [
+				"restart php-fpm"
+			]
+
+		}
+	]
+}

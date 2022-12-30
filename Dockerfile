@@ -1,15 +1,8 @@
-ARG ALPINE_VERSION=3.16
-# FROM alpine:${ALPINE_VERSION}
+# LABEL Maintainer="Darrel Drenth <3DDeans@gmail.com>"
+# LABEL Description="A Developer Container for GPhoto WebServer"
 FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
-#todo update
-# LABEL Maintainer="Tim de Pater <code@trafex.nl>"
-# LABEL Description="Lightweight container with Nginx 1.22 & PHP 8.1 based on Alpine Linux."
-# Setup document root
-WORKDIR /var/www/html
-
-# Install packages and remove default server definition
 RUN echo 'APT::Install-Suggests "0";' >> /etc/apt/apt.conf.d/00-docker
 RUN echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
 
@@ -18,20 +11,24 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+ARG php_ini_dest=/etc/php81/conf.d/custom.ini
+ARG fpm_pool_config_dest=/etc/php/8.1/fpm/pool.d/www.conf
+
+ARG nginx_config_dest=/etc/nginx/nginx.conf
+ARG webserver_config_dest=/etc/nginx/conf.d/webserver.conf
+ARG supervisord_config_dest=/etc/supervisor/conf.d/supervisord.conf
+
+WORKDIR /var/www
+
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    #
-    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
     && apt-get update \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-
-RUN apt-get update &&\
-apt-get install -y nginx \
-  gphoto2 \
+RUN apt-get install -y \
   php8.1\
   php8.1-fpm\
   php8.1-common\
@@ -49,31 +46,26 @@ apt-get install -y nginx \
   php8.1-zip\
   php8.1-bcmath\
   php8.1-xdebug\
+  nginx \
   curl\
-  supervisor;
+  supervisor\
+  git;
 
 # Create symlink so programs depending on `php` still function
 # RUN ln -s /usr/bin/php81 /usr/bin/php
-# COPY GphotoDeamon /usr/bin/gphotodeamon
 
 RUN mkdir /nonexistent
 
-
-# Configure nginx
-COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY webserver.conf /etc/nginx/conf.d/webserver.conf
-# Configure PHP-FPM
-COPY config/fpm-pool.conf /etc/php/8.1/fpm/pool.d/www.conf
+# Configure nginx, the webserver, PHP-FPM, and superviserd
+COPY config/nginx.conf $nginx_config_dest
+COPY webserver.conf $webserver_config_dest
+COPY config/fpm-pool.conf $fpm_pool_config_dest
 # COPY config/php.ini /etc/php81/conf.d/custom.ini
-
-# Configure supervisord
-COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY config/supervisord.conf $supervisord_config_dest
 
 RUN touch /var/log/php8.1-fpm.log
 RUN chown 666 /var/log/php8.1-fpm.log
 
-# nobody
-# www-data
 # Make sure files/folders needed by the processes are accessable when they run under the nobody user
 RUN chown -R $USERNAME /var/www /run /var/lib/nginx /var/log/nginx /var/log/php8.1-fpm.log /var/log/supervisor
 
