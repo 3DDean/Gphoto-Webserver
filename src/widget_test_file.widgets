@@ -1,0 +1,104 @@
+CameraName
+"Camera and Driver Configuration", "main", "", 0, 0, 0, window
+ "Camera Actions", "actions", "", 1, 0, 0, section
+  "Synchronize camera date and time with PC", "syncdatetime", "", 2, 0, 0, toggle
+  "UI Lock", "uilock", "", 3, 0, 0, toggle
+  "Popup Flash", "popupflash", "", 4, 0, 0, toggle
+  "Drive Canon DSLR Autofocus", "autofocusdrive", "", 5, 0, 0, toggle
+  "Drive Canon DSLR Manual focus", "manualfocusdrive", "", 6, 0, 0, radio
+   "Near 1", "Near 2", "Near 3", "None", "Far 1", "Far 2", "Far 3"
+  "Cancel Canon DSLR Autofocus", "cancelautofocus", "", 7, 0, 0, toggle
+  "Canon EOS Zoom", "eoszoom", "", 8, 0, 0, text
+  "Canon EOS Zoom Position", "eoszoomposition", "", 9, 0, 0, text
+  "Canon EOS Viewfinder", "viewfinder", "", 10, 0, 0, toggle
+  "Canon EOS Remote Release", "eosremoterelease", "", 11, 0, 0, radio
+   "None", "Press Half", "Press Full", "Release Half", "Release Full", "Immediate", "Press 1", "Press 2", "Press 3", "Release 1", "Release 2", "Release 3"
+  "Movie Mode", "eosmoviemode", "", 12, 0, 0, toggle
+  "PTP Opcode", "opcode", "", 13, 0, 0, text
+ "Camera Settings", "settings", "", 14, 0, 0, section
+  "Camera Date and Time", "datetime", "", 15, 0, 0, date
+  "Quick Review Time", "reviewtime", "", 16, 0, 0, radio
+   "None", "2 seconds", "4 seconds", "8 seconds", "Hold"
+  "Camera Output", "output", "", 17, 0, 0, radio
+   "TFT", "PC", "TFT + PC", "MOBILE", "TFT + MOBILE", "PC + MOBILE", "TFT + PC + MOBILE", "Off"
+  "Recording Destination", "movierecordtarget", "", 18, 0, 0, radio
+   "None"
+  "EVF Mode", "evfmode", "", 19, 0, 0, radio
+   "0", "1"
+  "Owner Name", "ownername", "", 20, 0, 0, text
+  "Artist", "artist", "", 21, 0, 0, text
+  "Copyright", "copyright", "", 22, 0, 0, text
+  "Custom Functions Ex", "customfuncex", "", 23, 0, 0, text
+  "Focus Info", "focusinfo", "", 24, 0, 0, text
+  "Strobo Firing", "strobofiring", "", 25, 0, 0, text
+  "Flash Charging State", "flashcharged", "", 26, 0, 0, text
+  "Auto Power Off", "autopoweroff", "", 27, 0, 0, text
+  "Depth of Field", "depthoffield", "", 28, 0, 0, text
+  "Capture Target", "capturetarget", "", 29, 0, 0, radio
+   "Internal RAM", "Memory card"
+  "Capture", "capture", "", 30, 0, 0, toggle
+  "Remote Mode", "remotemode", "", 31, 0, 0, text
+  "Event Mode", "eventmode", "", 32, 0, 0, text
+ "Camera Status Information", "status", "", 33, 0, 0, section
+  "Serial Number", "serialnumber", "", 34, 0, 0, text
+  "Camera Manufacturer", "manufacturer", "", 35, 0, 0, text
+  "Camera Model", "cameramodel", "", 36, 0, 0, text
+  "Device Version", "deviceversion", "", 37, 0, 0, text
+  "Vendor Extension", "vendorextension", "", 38, 0, 0, text
+  "Camera Model", "model", "", 39, 0, 0, text
+  "PTP Version", "ptpversion", "", 40, 0, 0, text
+  "Battery Level", "", "", 41, 1, 0, text
+  "Battery Level", "batterylevel", "", 42, 0, 0, text
+  "Lens Name", "lensname", "", 43, 0, 0, text
+  "Serial Number", "eosserialnumber", "", 44, 0, 0, text
+  "Shutter Counter", "shuttercounter", "", 45, 0, 0, text
+  "Available Shots", "availableshots", "", 46, 0, 0, text
+  "Movie Switch", "eosmovieswitch", "", 47, 0, 0, text
+ "Image Settings", "imgsettings", "", 48, 0, 0, section
+  "Image Format", "imageformat", "", 49, 0, 0, radio
+   "Large Fine JPEG", "Large Normal JPEG", "Medium Fine JPEG", "Medium Normal JPEG", "Small Fine JPEG", "Small Normal JPEG", "Smaller JPEG", "Tiny JPEG", "RAW + Large Fine JPEG", "RAW"
+  "Image Format SD", "imageformatsd", "", 50, 0, 0, radio
+   "Large Fine JPEG", "Large Normal JPEG", "Medium Fine JPEG", "Medium Normal JPEG", "Small Fine JPEG", "Small Normal JPEG", "Smaller JPEG", "Tiny JPEG", "RAW + Large Fine JPEG", "RAW"
+  "ISO Speed", "iso", "", 51, 0, 0, radio
+   "Auto"
+  "WhiteBalance", "whitebalance", "", 52, 0, 0, radio
+   "Auto"
+  "WhiteBalance X A", "whitebalancexa", "", 53, 0, 0, text
+  "WhiteBalance X B", "whitebalancexb", "", 54, 0, 0, text
+  "Color Space", "colorspace", "", 55, 0, 0, radio
+   "sRGB"
+ "Capture Settings", "capturesettings", "", 56, 0, 0, section
+  "Exposure Compensation", "exposurecompensation", "", 57, 0, 0, radio
+   "0"
+  "Focus Mode", "focusmode", "", 58, 0, 0, radio
+   "AI Focus"
+  "Aspect Ratio", "aspectratio", "", 59, 0, 0, radio
+   "3:2"
+  "Storage Device", "storageid", "", 60, 0, 0, text
+  "Canon Auto Exposure Mode", "autoexposuremode", "", 61, 0, 0, radio
+   "P", "TV", "AV", "Manual", "Bulb", "A_DEP", "DEP", "Custom", "Lock", "Green", "Night Portrait", "Sports", "Portrait", "Landscape", "Closeup", "Flash Off", "Auto", "Handheld Night Scene", "HDR Backlight Control", "Food", "Grainy B/W", "Soft focus", "Toy camera effect", "Fish-eye effect", "Water painting effect", "Miniature effect", "HDR art standard", "HDR art vivid", "HDR art bold", "HDR art embossed", "Panning", "Self Portrait", "Hybrid Auto", "Smooth skin", "Fv"
+  "Drive Mode", "drivemode", "", 62, 0, 0, radio
+   "Single", "Timer 10 sec", "Continuous timer"
+  "Picture Style", "picturestyle", "", 63, 0, 0, radio
+   "Standard"
+  "Aperture", "aperture", "", 64, 0, 0, radio
+   "implicit auto"
+  "Shutter Speed", "shutterspeed", "", 65, 0, 0, radio
+   "auto"
+  "Metering Mode", "meteringmode", "", 66, 0, 0, radio
+   "Evaluative"
+  "Live View Size", "liveviewsize", "", 67, 0, 0, radio
+   "Large", "Medium"
+  "Bracket Mode", "bracketmode", "", 68, 0, 0, radio
+   "Unknown value 0000"
+  "Auto Exposure Bracketing", "aeb", "", 69, 0, 0, radio
+   "off"
+  "Auto Lighting Optimization", "alomode", "", 70, 0, 0, radio
+   "Standard (disabled in manual exposure)"
+ "Other PTP Device Properties", "other", "", 71, 0, 0, section
+  "PTP Property 0xd402", "d402", "", 72, 1, 0, text
+  "PTP Property 0xd407", "d407", "", 73, 1, 0, text
+  "PTP Property 0xd406", "d406", "", 74, 0, 0, text
+  "PTP Property 0xd303", "d303", "", 75, 1, 0, text
+  "Battery Level", "5001", "", 76, 1, 0, menu
+   "100", "0", "75", "0", "50"

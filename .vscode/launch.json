@@ -2,20 +2,19 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Listen for XDebug",
+			"name": "Debug Webapp",
 			"type": "firefox",
 			"request": "launch",
-			// "reloadOnAttach": true,
 			"reAttach": true,
-			"url": "localhost:44551",
+			"url": "127.0.0.1",
 			"webRoot": "${workspaceFolder}/src",
+			"preLaunchTask": "restart nginx",
 			"pathMappings": [
 				{
-					"url": "http://localhost:44551",
+					"url": "http://127.0.0.1",
 					"path": "${workspaceFolder}/src"
 				}
-			],
-			"preLaunchTask": "restart nginx",
+			]
 		}
 	]
   }
