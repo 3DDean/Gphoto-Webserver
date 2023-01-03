@@ -1,6 +1,6 @@
 
 function get_back(array) {
-	return array[array.length-1];
+	return array[array.length - 1];
 }
 
 function new_input_element(type) {
@@ -43,7 +43,7 @@ class gphoto_widget_helper {
 		// this.whole = whole;
 		this.indent = indent.length;
 		this.human_name = human_name;
-		this.name = internal_name;
+		this.server_name = internal_name;
 		this.tooltip = tooltip;
 		this.id = id;
 
@@ -53,105 +53,114 @@ class gphoto_widget_helper {
 	}
 };
 
+function get_sub_elements(text) {
+	return text.replaceAll(/^\s+"|"$/g, '').split(/", "/g);
+}
+
 //Not yet working
-function get_option_elements(paranet, text) {
-	var elements =[...text.matchAll(/"(.+)(, )?"/g)];
+function get_option_elements(parent, text) {
+	var elements = get_sub_elements(text);
 	for (i = 0; i < elements.length; i++) {
 		var option = document.createElement("option")
 		option.setAttribute("Value", i)
 		option.setAttribute("label", elements[i][1])
-		paranet.appendChild(option)
+		parent.appendChild(option)
 	}
 }
 
-//Not yet working
-function get_radio_option_elements(paranet, html_name, text, ) {
-	var elements =[...text.matchAll(/"(.+)(, )?"/g)];
-	for (i = 0; i < elements.length; i++) {
+function create_radio_group(html_name, text) {
+	var element = document.createElement("fieldset");
+	// new_input_element("radio");
+	var options = get_sub_elements(text)
+	// text.replace(/^\s+/, '').split(/", "/g);
+	// [...text.matchAll(/"(.+?)"/g)];
+	var html_group = html_name + "Group"
+	for (i = 0; i < options.length; i++) {
+		var option_text = options[i];
+		var element_name = html_group + option_text;
 		var option = new_input_element("radio")
 		option.setAttribute("Value", i)
-		option.setAttribute("label", elements[i][1])
-		option.setAttribute("name", html_name)
-		label.appendChild()
-		paranet.appendChild(option)
+		option.setAttribute("label", option_text)
+		option.setAttribute("id", html_group + option_text)
+		// option.setAttribute("name", html_name)
+		option.name = html_group
+		// parent.appendChild()
+		var label = document.createElement("label");
+		label.setAttribute("for", element_name);
+		label.appendChild(document.createTextNode(option_text));
+
+		element.appendChild(label)
+		element.appendChild(option)
 	}
+	return element;
+	// get_radio_option_elements(element, html_name, config_text.get_next_line());
 }
 
-function get_range_elements(paranet, text) {
-	var [min, max, step] = text.match(/(\d+), (\d+), (\d+)/);
-	element.setAttribute("min", min);
-	element.setAttribute("max", max);
-	element.setAttribute("step", step);
-}
-
-function create_tab() {
-	var button = document.createElement("button");
-	button.className = "tab_page";
-	stack.push(button);
-	element = document.createElement("div");
-
-	element.appendChild(document.createTextNode(widget.human_name));
-}
-class tab_book {
+class tab_book extends HTMLDivElement {
 	constructor(human_name) {
-		this.title = document.createElement("h3")
-		// this.title.textContent = human_name;
-		this.title.appendChild(document.createTextNode(human_name));
+		super()
+		var header_element = document.createElement("h3")
+		var title_text = document.createTextNode(human_name)
+		header_element.appendChild(title_text)
 
-		this.divider = document.createElement("div");
-		this.divider.className = "tab_book";
-		document.body.appendChild(this.title)
-		document.body.appendChild(this.divider)
+		this.className = "tab_book";
+		this.header_element = header_element;
+		document.body.appendChild(header_element)
+		document.body.appendChild(this)
 
 		// this.divider = human_name;
 		// stack.push(this.divider);
-		this.children = [];
-
+		// this.children = [];
 	}
+
+	setActiveTab(tab_obj) {
+		this.open_tab.setInactive()
+		this.open_tab = tab_obj
+	}
+
 	appendChild(child) {
 		if (typeof this.open_tab == 'undefined') {
 			this.open_tab = child
-			this.open_tab.set_active();
+			this.open_tab.setActive();
 		}
-		this.children.push(child)
-
-		this.divider.appendChild(child.button)
+		super.appendChild(child)
 	}
 }
-function activate_button()
-{
-	this.data_object.set_active()
-}
+customElements.define('tab-book', tab_book, { extends: 'div' });
 
-class tab_page {
+class tab_page extends HTMLButtonElement {
 	constructor(parent, human_text) {
-		this.button = document.createElement("button");
-		this.button.className = "tab_page";
-		this.button.onclick = activate_button;
-		this.button.data_object = this;
-		this.button.appendChild(document.createTextNode(human_text));
-		this.divider = document.createElement("div");
-		this.divider.className = "tab_content"
-		this.divider.style.display = "none";
-		this.parent = parent;
+		super()
+		this.className = "tab_page";
+		this.onclick = this.onClickFunc;
+		this.appendChild(document.createTextNode(human_text));
 
-		document.body.appendChild(this.divider)
+		var divider = document.createElement("div");
+		divider.className = "tab_content"
+		divider.style.display = "none";
+		document.body.appendChild(divider)
+
+		this.divider = divider;
+		this.parent = parent;
 	}
-	set_active() {
-		this.parent.open_tab.set_inactive()
+
+	onClickFunc() {
+		this.parent.setActiveTab(this)
+		this.setActive()
+	}
+
+	setActive() {
 		this.divider.style.display = "block"
-		this.button.className = "tab_content.active"
-		this.parent.open_tab = this
+		this.className = "tab_content.active"
 	}
-	set_inactive() {
+
+	setInactive() {
 		this.divider.style.display = "none"
-		this.button.className = "tab_content"
-	}
-	appendChild(child) {
-		this.divider.appendChild(child);
+		this.className = "tab_content"
 	}
 }
 
+customElements.define('tab-page', tab_page, { extends: 'button' });
 class camera_config {
 	constructor(text) {
 		var config_text = new file_processor(text);
@@ -188,7 +197,7 @@ class camera_config {
 				case "section":
 					element = new tab_page(stack_top, widget.human_name)
 					stack_top.appendChild(element)
-					stack.push(element)
+					stack.push(element.divider)
 
 					skip_finilization = true;
 					break;
@@ -199,7 +208,7 @@ class camera_config {
 				/**< \brief Slider widget. */
 				case "range":
 					element = new_input_element("range");
-					get_range_elements(config_text.get_next_line());
+					get_range_elements(html_name, config_text.get_next_line());
 					break;
 				/**< \brief Toggle widget (think check box) */
 				case "toggle":
@@ -208,9 +217,10 @@ class camera_config {
 				/**< \brief Radio button widget. */
 				case "radio":
 					//TODO loop through 
-					element = new_input_element("radio");
-					//Doesn't yet work
-					get_option_elements(element, config_text.get_next_line());
+					element = create_radio_group(html_name, config_text.get_next_line())
+					// new_input_element("radio");
+					// //Doesn't yet work
+					// get_option_elements(element, );
 					break;
 				/**< \brief Menu widget (same as RADIO). */
 				case "menu":
@@ -228,15 +238,12 @@ class camera_config {
 				default:
 					throw Error("Unrecognized Gphoto Widget");
 			}
+
+			element.setAttribute("id", html_name);
+			element.setAttribute("label", widget.tooltip);
+			element.setAttribute("name", widget.server_name);
+
 			if (!skip_finilization) {
-
-				element.setAttribute("id", html_name);
-				element.setAttribute("label", widget.tooltip);
-				element.setAttribute("name", widget.name);
-				element.setAttribute("readonly", widget.readonly);
-
-				// this.indent = indent;
-
 				// this.readonly = readonly;
 				// this.changed = changed;
 
@@ -254,8 +261,16 @@ class camera_config {
 				get_back(stack).appendChild(divider);
 			}
 			this.elements.push(element);
-
 		}
+	}
+	load_values(text) {
+		var value_text = new file_processor(text);
+
+		do {
+			var [whole, index, value] = value_text.get_line().match(/(\d+)\s(.*)/)
+			this.elements[index].value = value;
+		}
+		while (value_text.next())
 	}
 };
 
@@ -303,9 +318,19 @@ function init() {
 		if (ajax_config.readyState === 4) {
 			camera_config_gui = new camera_config(ajax_config.response);
 			//init_camera_config();
+			ajax_config.onreadystatechange = function () {
+				if (ajax_config.readyState === 4) {
+					camera_config_gui.load_values(ajax_config.response)
+				}
+			}
+			ajax_config.open("GET", "gphoto_values.php", true);
+			ajax_config.send();
 		}
 	}
-
 	ajax_config.open("GET", "gphoto_config.php", true);
 	ajax_config.send();
+
+
+
+
 }
