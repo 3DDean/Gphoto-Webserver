@@ -3,11 +3,6 @@ function get_back(array) {
 	return array[array.length - 1];
 }
 
-function new_input_element(type) {
-	var element = document.createElement("input");
-	element.setAttribute("type", type);
-	return element;
-}
 
 class file_processor {
 	constructor(text) {
@@ -35,11 +30,11 @@ class file_processor {
 };
 
 class gphoto_widget_helper {
-	constructor(widget_text) {
+	constructor(camera_str, widget_text) {
 		//inverse of the format_string widget_formatter located in GPhotoDeamon gphoto-widget.h 
 		const widget_regex = /(\s*)\"(.+)\", \"(.*)\", \"(.*)\", (\d+), (\w), (\w), (\w+)/;
 		const [whole, indent, human_name, internal_name, tooltip, id, readonly, changed, type] = widget_text.match(widget_regex);
-
+		this.html_name = internal_name
 		// this.whole = whole;
 		this.indent = indent.length;
 		this.human_name = human_name;
@@ -100,14 +95,14 @@ class tab_book extends HTMLDivElement {
 	constructor(human_name) {
 		super()
 		var header_element = document.createElement("h3")
-		var title_text = document.createTextNode(human_name)
-		header_element.appendChild(title_text)
+
+		header_element.appendChild(document.createTextNode(human_name))
 
 		this.className = "tab_book";
 		this.header_element = header_element;
+
 		document.body.appendChild(header_element)
 		document.body.appendChild(this)
-
 		// this.divider = human_name;
 		// stack.push(this.divider);
 		// this.children = [];
@@ -159,8 +154,134 @@ class tab_page extends HTMLButtonElement {
 		this.className = "tab_content"
 	}
 }
-
 customElements.define('tab-page', tab_page, { extends: 'button' });
+
+function set_attributes(element, attributes) {
+	for (const [key, value] of attributes) {
+		element.setAttribute(key, value)
+	}
+}
+
+function create_text_widget() {
+	var element = document.createElement("input");
+	element.setAttribute("type", "text");
+
+	element.set_widget_value = function (element, value) {
+		element.setAttribute("value", value)
+	}
+
+	return element;
+}
+
+function create_toggle_widget() {
+	var element = document.createElement("input");
+	element.setAttribute("type", "checkbox");
+
+	element.set_widget_value = function (element, value) {
+		element.checked = value == "1"
+	}
+
+	return element;
+}
+
+function create_button_widget() {
+	var element = document.createElement("input");
+	element.setAttribute("type", "button");
+
+	element.set_widget_value = function (element, value) { }
+
+	return element;
+}
+function create_date_widget() {
+	var element = document.createElement("input");
+	element.setAttribute("type", "date");
+
+	//This isn't working
+	element.set_widget_value = function (element, value) {
+		var d = new Date(0);
+		d.setUTCSeconds(value);
+		element.setAttribute("value", d.toString())
+	}
+
+	return element;
+}
+
+function create_range_widget(text) {
+	var element = document.createElement("input");
+	element.setAttribute("type", "range");
+
+	let [min, max, step] = text.match(/(\d+), (\d+), (\d+)/);
+	set_attributes(
+		element,
+		[
+			["min", min],
+			["max", max],
+			["step", step]
+		]
+	);
+
+	element.set_widget_value = function (element, value) {
+	}
+
+	return element;
+}
+
+function create_radio_widget(html_name, text) {
+	var element = document.createElement("fieldset");
+
+	var html_group = html_name + "_option_"
+	var index = 0
+	for (const option_text of get_sub_elements(text)) {
+		var element_name = html_group + index;
+		var radio_button = document.createElement("input");
+		set_attributes(
+			radio_button,
+			[
+				["type", "radio"],
+				["value", index],
+				["label", option_text],
+				["id", element_name],
+				["name", html_group]
+			]
+		);
+
+		var label = document.createElement("label");
+		label.setAttribute("for", element_name);
+		label.appendChild(document.createTextNode(option_text));
+
+		element.appendChild(label)
+		element.appendChild(radio_button)
+		index++
+	}
+
+	element.set_widget_value = function (element, value) {
+		if (value >= 0) {
+			element.children[value * 2 + 1].checked = true;
+		}
+	}
+
+	return element;
+}
+
+function create_menu_widget(text) {
+	var element = document.createElement("select");
+
+	var index = 0
+	for (const option_text of get_sub_elements(text)) {
+		var option = document.createElement("option")
+		option.setAttribute("value", index)
+		option.setAttribute("label", option_text)
+		element.appendChild(option)
+		index++
+	}
+
+	element.set_widget_value = function (element, value) {
+		this.children[value].setAttribute("selected", true)
+	}
+
+	return element;
+}
+
 class camera_config {
 	constructor(text) {
 		var config_text = new file_processor(text);
@@ -175,8 +296,8 @@ class camera_config {
 		//TODO implement value loading
 
 		while (config_text.next()) {
-			const widget = new gphoto_widget_helper(config_text.get_line());
-			const html_name = camera_name + widget.id;
+			const widget = new gphoto_widget_helper(camera_name, config_text.get_line());
+			const html_name = widget.server_name;
 			var element;
 			var skip_finilization = false;
 
@@ -185,90 +306,91 @@ class camera_config {
 			}
 			indent = widget.indent;
 			var stack_top = get_back(stack)
+			if (widget.html_name != "") {
 
-			switch (widget.type) {
-				case "window":
-					element = new tab_book(widget.human_name)
-					stack.push(element)
+				switch (widget.type) {
+					case "window":
+						element = new tab_book(widget.human_name)
+						stack.push(element)
 
-					skip_finilization = true;
-					break;
-				/**< \brief Section widget (think Tab) */
-				case "section":
-					element = new tab_page(stack_top, widget.human_name)
-					stack_top.appendChild(element)
-					stack.push(element.divider)
+						skip_finilization = true;
+						break;
+					/**< \brief Section widget (think Tab) */
+					case "section":
+						element = new tab_page(stack_top, widget.human_name)
+						stack_top.appendChild(element)
+						stack.push(element.divider)
 
-					skip_finilization = true;
-					break;
-				/**< \brief Text widget. */
-				case "text":
-					element = new_input_element("text");
-					break;
-				/**< \brief Slider widget. */
-				case "range":
-					element = new_input_element("range");
-					get_range_elements(html_name, config_text.get_next_line());
-					break;
-				/**< \brief Toggle widget (think check box) */
-				case "toggle":
-					element = new_input_element("checkbox");
-					break;
-				/**< \brief Radio button widget. */
-				case "radio":
-					//TODO loop through 
-					element = create_radio_group(html_name, config_text.get_next_line())
-					// new_input_element("radio");
-					// //Doesn't yet work
-					// get_option_elements(element, );
-					break;
-				/**< \brief Menu widget (same as RADIO). */
-				case "menu":
-					element = document.createElement("select");
-					get_option_elements(element, config_text.get_next_line());
-					break;
-				/**< \brief Button press widget. */
-				case "button":
-					element = new_input_element("button");
-					break;
-				/**< \brief Date entering widget. */
-				case "date":
-					element = new_input_element("date");
-					break;
-				default:
-					throw Error("Unrecognized Gphoto Widget");
+						skip_finilization = true;
+						break;
+					/**< \brief Text widget. */
+					case "text":
+						element = create_text_widget()
+						break;
+					/**< \brief Slider widget. */
+					case "range":
+						element = create_range_widget(config_text.get_next_line())
+						break;
+					/**< \brief Toggle widget (think check box) */
+					case "toggle":
+						element = create_toggle_widget("checkbox");
+						break;
+					/**< \brief Radio button widget. */
+					case "radio":
+						element = create_radio_widget(html_name, config_text.get_next_line())
+						break;
+					/**< \brief Menu widget (same as RADIO). */
+					case "menu":
+						element = create_menu_widget(config_text.get_next_line())
+						break;
+					/**< \brief Button press widget. */
+					case "button":
+						element = create_button_widget()
+						break;
+					/**< \brief Date entering widget. */
+					case "date":
+						element = create_date_widget()
+						break;
+					default:
+						throw Error("Unrecognized Gphoto Widget");
+				}
+
+				element.setAttribute("id", html_name);
+				element.setAttribute("label", widget.tooltip);
+				element.setAttribute("name", widget.server_name);
+
+				if (!skip_finilization) {
+
+					var label_text = document.createTextNode(widget.human_name);
+
+					var label = document.createElement("label");
+					label.setAttribute("for", html_name);
+					label.appendChild(label_text);
+
+					var divider = document.createElement("div");
+
+					divider.appendChild(label);
+					divider.appendChild(element);
+
+					get_back(stack).appendChild(divider);
+				}
+				this.elements.push(element);
 			}
-
-			element.setAttribute("id", html_name);
-			element.setAttribute("label", widget.tooltip);
-			element.setAttribute("name", widget.server_name);
-
-			if (!skip_finilization) {
-				// this.readonly = readonly;
-				// this.changed = changed;
-
-				var label_text = document.createTextNode(widget.human_name);
-
-				var label = document.createElement("label");
-				label.setAttribute("for", html_name);
-				label.appendChild(label_text);
-
-				var divider = document.createElement("div");
-
-				divider.appendChild(label);
-				divider.appendChild(element);
-
-				get_back(stack).appendChild(divider);
-			}
-			this.elements.push(element);
 		}
 	}
+
 	load_values(text) {
 		var value_text = new file_processor(text);
 
 		do {
-			var [whole, index, value] = value_text.get_line().match(/(\d+)\s(.*)/)
-			this.elements[index].value = value;
+			var match = value_text.get_line().match(/(\w*)\s(.*)/)
+			if (match) {
+				var [whole, index, value] = match
+				if (index.length != 0) {
+					var element = document.getElementById(index)
+					element.set_widget_value(element, value)
+				}
+			}
 		}
 		while (value_text.next())
 	}
@@ -317,7 +439,7 @@ function init() {
 	ajax_config.onreadystatechange = function () {
 		if (ajax_config.readyState === 4) {
 			camera_config_gui = new camera_config(ajax_config.response);
-			//init_camera_config();
+
 			ajax_config.onreadystatechange = function () {
 				if (ajax_config.readyState === 4) {
 					camera_config_gui.load_values(ajax_config.response)
