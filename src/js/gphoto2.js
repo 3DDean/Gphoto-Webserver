@@ -3,11 +3,54 @@ function get_back(array) {
 	return array[array.length - 1];
 }
 
+function set_attributes(element, attributes) {
+	for (const [key, value] of attributes) {
+		element.setAttribute(key, value)
+	}
+}
+
+function create_element(elementTagName, attributes) {
+	let element = document.createElement(elementTagName)
+
+	for (const [key, value] of attributes) {
+		element.setAttribute(key, value)
+	}
+}
+
+function create_label(targetName, text)
+{
+	let label = document.createElement("label");
+	label.setAttribute("for", targetName);
+	label.textContent = text
+	return label;
+}
+
+function get_sub_elements(text) {
+	return (text.replaceAll(/^\s+"|"$/g, '').split(/", "/g)).entries();
+}
+
+//Not yet working
+function get_option_elements(parent, text) {
+
+	for (const [index, option_text] of get_sub_elements(text)) {
+		let option = document.createElement("option")
+		set_attributes(option,
+			[
+				["value", index],
+				["label", option_text[index][1]]
+			])
+
+		parent.appendChild(option)
+	}
+}
+
+const container = document.createElement('div');
+container.id = 'CameraConfigContainer';
 
 class file_processor {
 	constructor(text) {
 		const unfiltered_lines = text.split(/\n/g);
-		this.lines = unfiltered_lines.filter(word => word != '');
+		this.lines = unfiltered_lines.slice().filter((line) => line.trim() !== '');
 
 		this.index = 0;
 	}
@@ -41,60 +84,16 @@ class gphoto_widget_helper {
 		this.server_name = internal_name;
 		this.tooltip = tooltip;
 		this.id = id;
-
 		this.readonly = readonly == "0" ? false : true;
 		this.changed = changed == "0" ? false : true;
 		this.type = type;
 	}
 };
 
-function get_sub_elements(text) {
-	return text.replaceAll(/^\s+"|"$/g, '').split(/", "/g);
-}
-
-//Not yet working
-function get_option_elements(parent, text) {
-	var elements = get_sub_elements(text);
-	for (i = 0; i < elements.length; i++) {
-		var option = document.createElement("option")
-		option.setAttribute("Value", i)
-		option.setAttribute("label", elements[i][1])
-		parent.appendChild(option)
-	}
-}
-
-function create_radio_group(html_name, text) {
-	var element = document.createElement("fieldset");
-	// new_input_element("radio");
-	var options = get_sub_elements(text)
-	// text.replace(/^\s+/, '').split(/", "/g);
-	// [...text.matchAll(/"(.+?)"/g)];
-	var html_group = html_name + "Group"
-	for (i = 0; i < options.length; i++) {
-		var option_text = options[i];
-		var element_name = html_group + option_text;
-		var option = new_input_element("radio")
-		option.setAttribute("Value", i)
-		option.setAttribute("label", option_text)
-		option.setAttribute("id", html_group + option_text)
-		// option.setAttribute("name", html_name)
-		option.name = html_group
-		// parent.appendChild()
-		var label = document.createElement("label");
-		label.setAttribute("for", element_name);
-		label.appendChild(document.createTextNode(option_text));
-
-		element.appendChild(label)
-		element.appendChild(option)
-	}
-	return element;
-	// get_radio_option_elements(element, html_name, config_text.get_next_line());
-}
-
 class tab_book extends HTMLDivElement {
 	constructor(human_name) {
 		super()
-		var header_element = document.createElement("h3")
+		let header_element = document.createElement("h3")
 
 		header_element.appendChild(document.createTextNode(human_name))
 
@@ -130,7 +129,7 @@ class tab_page extends HTMLButtonElement {
 		this.onclick = this.onClickFunc;
 		this.appendChild(document.createTextNode(human_text));
 
-		var divider = document.createElement("div");
+		let divider = document.createElement("div");
 		divider.className = "tab_content"
 		divider.style.display = "none";
 		document.body.appendChild(divider)
@@ -156,14 +155,33 @@ class tab_page extends HTMLButtonElement {
 }
 customElements.define('tab-page', tab_page, { extends: 'button' });
 
-function set_attributes(element, attributes) {
-	for (const [key, value] of attributes) {
-		element.setAttribute(key, value)
+function create_radio_group(html_name, text) {
+	let element = document.createElement("fieldset");
+
+	let html_group = html_name + "Group"
+	for (const [index, option_text] of get_sub_elements(text)) {
+		// for (let i = 0; i < options.length; i++) {
+		let element_name = html_group + option_text;
+		let option = new_input_element("radio")
+
+		set_attributes(
+			option,
+			[
+				["value", index],
+				["label", option_text],
+				["id", html_group + option_text],
+				["name", html_group]
+			]
+		);
+
+		element.appendChild(create_label(element_name, option_text))
+		element.appendChild(option)
 	}
+	return element;
 }
 
 function create_text_widget() {
-	var element = document.createElement("input");
+	let element = document.createElement("input");
 	element.setAttribute("type", "text");
 
 	element.set_widget_value = function (element, value) {
@@ -174,7 +192,7 @@ function create_text_widget() {
 }
 
 function create_toggle_widget() {
-	var element = document.createElement("input");
+	let element = document.createElement("input");
 	element.setAttribute("type", "checkbox");
 
 	element.set_widget_value = function (element, value) {
@@ -185,20 +203,22 @@ function create_toggle_widget() {
 }
 
 function create_button_widget() {
-	var element = document.createElement("input");
+	let element = document.createElement("input");
 	element.setAttribute("type", "button");
 
+	//Todo 
 	element.set_widget_value = function (element, value) { }
 
 	return element;
 }
+
 function create_date_widget() {
-	var element = document.createElement("input");
+	let element = document.createElement("input");
 	element.setAttribute("type", "date");
 
 	//This isn't working
 	element.set_widget_value = function (element, value) {
-		var d = new Date(0);
+		let d = new Date(0);
 		d.setUTCSeconds(value);
 		element.setAttribute("value", d.toString())
 	}
@@ -207,13 +227,13 @@ function create_date_widget() {
 }
 
 function create_range_widget(text) {
-	var element = document.createElement("input");
-	element.setAttribute("type", "range");
+	let element = document.createElement("input");
 
 	let [min, max, step] = text.match(/(\d+), (\d+), (\d+)/);
 	set_attributes(
 		element,
 		[
+			["type", "range"],
 			["min", min],
 			["max", max],
 			["step", step]
@@ -221,19 +241,20 @@ function create_range_widget(text) {
 	);
 
 	element.set_widget_value = function (element, value) {
+		element.value = value
 	}
 
 	return element;
 }
 
 function create_radio_widget(html_name, text) {
-	var element = document.createElement("fieldset");
+	let element = document.createElement("fieldset");
 
-	var html_group = html_name + "_option_"
-	var index = 0
-	for (const option_text of get_sub_elements(text)) {
-		var element_name = html_group + index;
-		var radio_button = document.createElement("input");
+	let html_group = html_name + "_option_"
+
+	for (const [index, option_text] of get_sub_elements(text)) {
+		let element_name = html_group + index;
+		let radio_button = document.createElement("input");
 		set_attributes(
 			radio_button,
 			[
@@ -245,13 +266,8 @@ function create_radio_widget(html_name, text) {
 			]
 		);
 
-		var label = document.createElement("label");
-		label.setAttribute("for", element_name);
-		label.appendChild(document.createTextNode(option_text));
-
-		element.appendChild(label)
+		element.appendChild(create_label(element_name, option_text))
 		element.appendChild(radio_button)
-		index++
 	}
 
 	element.set_widget_value = function (element, value) {
@@ -264,15 +280,16 @@ function create_radio_widget(html_name, text) {
 }
 
 function create_menu_widget(text) {
-	var element = document.createElement("select");
+	let element = document.createElement("select");
 
-	var index = 0
-	for (const option_text of get_sub_elements(text)) {
-		var option = document.createElement("option")
-		option.setAttribute("value", index)
-		option.setAttribute("label", option_text)
+	for (const [index, option_text] of get_sub_elements(text)) {
+		let option = document.createElement("option")
+		set_attributes(option,
+			[
+				["value", index],
+				["label", option_text]
+			])
 		element.appendChild(option)
-		index++
 	}
 
 	element.set_widget_value = function (element, value) {
@@ -282,14 +299,28 @@ function create_menu_widget(text) {
 	return element;
 }
 
+function handleEvent(e) {
+	console.log(`${e.type}: ${e.loaded} bytes transferred\n`);
+}
+
+function addListeners(xhr) {
+	xhr.addEventListener('loadstart', handleEvent);
+	xhr.addEventListener('load', handleEvent);
+	xhr.addEventListener('loadend', handleEvent);
+	xhr.addEventListener('progress', handleEvent);
+	xhr.addEventListener('error', handleEvent);
+	xhr.addEventListener('abort', handleEvent);
+}
+
 class camera_config {
 	constructor(text) {
-		var config_text = new file_processor(text);
+		let config_text = new file_processor(text);
 
 		const camera_name = config_text.get_line();
 		this.elements = [];
-		var stack = [];
-		var indent = 0;
+		this.changedElements = new Map();;
+		let stack = [];
+		let indent = 0;
 		//TODO implement readonly element alternatives
 		//TODO improve formating, probably into a table
 		//TODO implement tabing for tab_pages
@@ -298,14 +329,14 @@ class camera_config {
 		while (config_text.next()) {
 			const widget = new gphoto_widget_helper(camera_name, config_text.get_line());
 			const html_name = widget.server_name;
-			var element;
-			var skip_finilization = false;
+			let element;
+			let skip_finilization = false;
 
 			if (indent > widget.indent) {
 				stack.pop();
 			}
 			indent = widget.indent;
-			var stack_top = get_back(stack)
+			let stack_top = get_back(stack)
 			if (widget.html_name != "") {
 
 				switch (widget.type) {
@@ -355,21 +386,21 @@ class camera_config {
 						throw Error("Unrecognized Gphoto Widget");
 				}
 
-				element.setAttribute("id", html_name);
-				element.setAttribute("label", widget.tooltip);
-				element.setAttribute("name", widget.server_name);
+				set_attributes(element,
+					[
+						["id", html_name],
+						["label", widget.tooltip],
+						["name", widget.server_name]
+					])
 
 				if (!skip_finilization) {
+					element.addEventListener("change", (event) => {
+						this.changedElements.set(event.target.id, event.target);
+					});
+					
+					let divider = document.createElement("div");
 
-					var label_text = document.createTextNode(widget.human_name);
-
-					var label = document.createElement("label");
-					label.setAttribute("for", html_name);
-					label.appendChild(label_text);
-
-					var divider = document.createElement("div");
-
-					divider.appendChild(label);
+					divider.appendChild(create_label(html_name, widget.human_name));
 					divider.appendChild(element);
 
 					get_back(stack).appendChild(divider);
@@ -377,18 +408,69 @@ class camera_config {
 				this.elements.push(element);
 			}
 		}
+		const submitButton = document.createElement("button");
+		submitButton.type = "submit";
+		submitButton.textContent = "Submit";
+		submitButton.addEventListener("click", (event) => {
+			let message = "";
+			for (const [key, value] of this.changedElements) {
+				// console.log(`${key} => ${value}`);
+				if (value.value != value.current_camera_value) {
+					// message.setAttribute(key, value.value);				
+					message += key + " " + value.value + "\n";
+
+					// value.current_camera_value = value.value;
+				}
+			}
+			addListeners(ajax_cmd);
+
+			ajax_cmd.addEventListener('load', (event) => {
+
+				if (ajax_cmd.status === 200) {
+					// retrieve the response from the server
+					for (const [key, value] of this.changedElements) {
+						// console.log(`${key} => ${value}`);
+						if (value.value != value.current_camera_value) {
+							// message.setAttribute(key, value.value);				
+
+							//TODO ADD in special processers for checkboxes and radials values
+
+							message += key + " " + value.value + "\n";
+
+							// value.current_camera_value = value.value;
+						}
+					}
+
+					let response = ajax_cmd.responseText;
+
+				} else {
+					console.log('Error: ' + ajax_cmd.statusText);
+				}
+			});
+			ajax_cmd.open("POST", "gphoto_pipe.php", true);
+			ajax_cmd.setRequestHeader("Content-Type", "application/json");
+			// let json_config = JSON.stringify(message);
+			ajax_cmd.send(message);
+			//Todo move this into a responce funciton
+			this.changedElements.clear();
+		})
+
+		submitButton.setAttribute("camera_config", this)
+
+		document.body.appendChild(submitButton);
 	}
 
 	load_values(text) {
-		var value_text = new file_processor(text);
+		let value_text = new file_processor(text);
 
 		do {
-			var match = value_text.get_line().match(/(\w*)\s(.*)/)
+			let match = value_text.get_line().match(/(\w*)\s(.*)/)
 			if (match) {
-				var [whole, index, value] = match
+				let [whole, index, value] = match
 				if (index.length != 0) {
-					var element = document.getElementById(index)
-					element.set_widget_value(element, value)
+					let element = document.getElementById(index)
+					element.set_widget_value(element, value);
+					element.setAttribute("current_camera_value", value);
 				}
 			}
 		}
@@ -399,7 +481,7 @@ class camera_config {
 //
 // Ajax Commands
 //
-var ajax_cmd;
+let ajax_cmd;
 
 if (window.XMLHttpRequest) {
 	ajax_cmd = new XMLHttpRequest();
@@ -408,18 +490,9 @@ else {
 	ajax_cmd = new ActiveXObject("Microsoft.XMLHTTP");
 }
 
-// function encodeCmd(s) {
-//    return s.replace(/&/g,"%26").replace(/#/g,"%23").replace(/\+/g,"%2B");
-// }
-
-function send_cmd(cmd) {
-	ajax_cmd.open("GET", "gphoto_pipe.php", true);
-	ajax_cmd.send(encodeCmd(cmd));
-}// Get the JSON contents
-
 function update_preview_delay() {
-	var video_fps = parseInt(document.getElementById("video_fps").value);
-	var divider = parseInt(document.getElementById("divider").value);
+	let video_fps = parseInt(document.getElementById("video_fps").value);
+	let divider = parseInt(document.getElementById("divider").value);
 	preview_delay = Math.floor(divider / Math.max(video_fps, 1) * 1000000);
 }
 
@@ -427,8 +500,8 @@ function update_preview_delay() {
 // Init
 //
 function init() {
-	var ajax_config;
-	var camera_config_gui;
+	let ajax_config;
+	let camera_config_gui;
 	if (window.XMLHttpRequest) {
 		ajax_config = new XMLHttpRequest();
 	}
@@ -451,8 +524,4 @@ function init() {
 	}
 	ajax_config.open("GET", "gphoto_config.php", true);
 	ajax_config.send();
-
-
-
-
 }
