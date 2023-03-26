@@ -172,7 +172,7 @@ function create_radio_group(html_name, text) {
 				["name", html_group]
 			]
 		);
-
+		element.gphoto_name = html_name
 		element.appendChild(create_label(element_name, option_text))
 		element.appendChild(option)
 	}
@@ -227,7 +227,7 @@ function create_radio_widget(html_name, text) {
 				["gphoto_name", html_name]
 			]
 		);
-
+		radio_button.gphoto_name = html_name
 		element.appendChild(create_label(element_name, option_text))
 		element.appendChild(radio_button)
 	}
@@ -378,9 +378,9 @@ class camera_config {
 					[
 						["id", html_name],
 						["label", widget.tooltip],
-						["name", widget.server_name],
-						["gphoto_name", html_name]
+						["name", widget.server_name]
 					])
+				element.gphoto_name = html_name
 
 				if (!skip_finilization) {
 					element.addEventListener("change", (event) => {
@@ -409,7 +409,7 @@ class camera_config {
 			let message = "";
 			for (const [key, value] of this.changedElements) {
 				if (value.value != value.current_camera_value) {
-					message += key + " " + value.value + "\n";
+					message += value.gphoto_name + " " + value.value + "\n";
 				}
 			}
 			addListeners(ajax_cmd);
