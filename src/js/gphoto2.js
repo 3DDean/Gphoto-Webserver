@@ -17,8 +17,7 @@ function create_element(elementTagName, attributes) {
 	}
 }
 
-function create_label(targetName, text)
-{
+function create_label(targetName, text) {
 	let label = document.createElement("label");
 	label.setAttribute("for", targetName);
 	label.textContent = text
@@ -180,48 +179,10 @@ function create_radio_group(html_name, text) {
 	return element;
 }
 
-function create_text_widget() {
+function create_input_widget(typeStr, func) {
 	let element = document.createElement("input");
-	element.setAttribute("type", "text");
-
-	element.set_widget_value = function (element, value) {
-		element.setAttribute("value", value)
-	}
-
-	return element;
-}
-
-function create_toggle_widget() {
-	let element = document.createElement("input");
-	element.setAttribute("type", "checkbox");
-
-	element.set_widget_value = function (element, value) {
-		element.checked = value == "1"
-	}
-
-	return element;
-}
-
-function create_button_widget() {
-	let element = document.createElement("input");
-	element.setAttribute("type", "button");
-
-	//Todo 
-	element.set_widget_value = function (element, value) { }
-
-	return element;
-}
-
-function create_date_widget() {
-	let element = document.createElement("input");
-	element.setAttribute("type", "date");
-
-	//This isn't working
-	element.set_widget_value = function (element, value) {
-		let d = new Date(0);
-		d.setUTCSeconds(value);
-		element.setAttribute("value", d.toString())
-	}
+	element.setAttribute("type", typeStr);
+	element.set_widget_value = func
 
 	return element;
 }
@@ -262,7 +223,8 @@ function create_radio_widget(html_name, text) {
 				["value", index],
 				["label", option_text],
 				["id", element_name],
-				["name", html_group]
+				["name", html_group],
+				["gphoto_name", html_name]
 			]
 		);
 
@@ -337,13 +299,12 @@ class camera_config {
 			}
 			indent = widget.indent;
 			let stack_top = get_back(stack)
-			if (widget.html_name != "") {
 
+			if (widget.html_name != "") {
 				switch (widget.type) {
 					case "window":
 						element = new tab_book(widget.human_name)
 						stack.push(element)
-
 						skip_finilization = true;
 						break;
 					/**< \brief Section widget (think Tab) */
@@ -354,17 +315,9 @@ class camera_config {
 
 						skip_finilization = true;
 						break;
-					/**< \brief Text widget. */
-					case "text":
-						element = create_text_widget()
-						break;
 					/**< \brief Slider widget. */
 					case "range":
 						element = create_range_widget(config_text.get_next_line())
-						break;
-					/**< \brief Toggle widget (think check box) */
-					case "toggle":
-						element = create_toggle_widget("checkbox");
 						break;
 					/**< \brief Radio button widget. */
 					case "radio":
@@ -374,30 +327,66 @@ class camera_config {
 					case "menu":
 						element = create_menu_widget(config_text.get_next_line())
 						break;
+					/**< \brief Text widget. */
+					case "text":
+						element =
+							create_input_widget(
+								"text",
+								function (element, value) {
+									element.setAttribute("value", value)
+								}
+							)
+						break;
+					/**< \brief Toggle widget (think check box) */
+					case "toggle":
+						element =
+							create_input_widget(
+								"checkbox",
+								function (element, value) {
+									element.checked = value == "1"
+								}
+							)
+						break;
 					/**< \brief Button press widget. */
 					case "button":
-						element = create_button_widget()
+						element =
+							create_input_widget(
+								"button",
+								function (element, value) {
+
+								}
+							)
 						break;
 					/**< \brief Date entering widget. */
 					case "date":
-						element = create_date_widget()
+						element =
+							create_input_widget(
+								"date",
+								function (element, value) {
+									let d = new Date(0);
+									d.setUTCSeconds(value);
+									element.setAttribute("value", d.toString())
+								}
+							)
 						break;
 					default:
 						throw Error("Unrecognized Gphoto Widget");
 				}
 
+				//TODO integrate readonly property
 				set_attributes(element,
 					[
 						["id", html_name],
 						["label", widget.tooltip],
-						["name", widget.server_name]
+						["name", widget.server_name],
+						["gphoto_name", html_name]
 					])
 
 				if (!skip_finilization) {
 					element.addEventListener("change", (event) => {
 						this.changedElements.set(event.target.id, event.target);
 					});
-					
+
 					let divider = document.createElement("div");
 
 					divider.appendChild(create_label(html_name, widget.human_name));
@@ -408,36 +397,28 @@ class camera_config {
 				this.elements.push(element);
 			}
 		}
+
 		const submitButton = document.createElement("button");
 		submitButton.type = "submit";
 		submitButton.textContent = "Submit";
+
 		submitButton.addEventListener("click", (event) => {
+			
+			submitButton.disabled = true;
+			
 			let message = "";
 			for (const [key, value] of this.changedElements) {
-				// console.log(`${key} => ${value}`);
 				if (value.value != value.current_camera_value) {
-					// message.setAttribute(key, value.value);				
 					message += key + " " + value.value + "\n";
-
-					// value.current_camera_value = value.value;
 				}
 			}
 			addListeners(ajax_cmd);
 
 			ajax_cmd.addEventListener('load', (event) => {
-
 				if (ajax_cmd.status === 200) {
-					// retrieve the response from the server
 					for (const [key, value] of this.changedElements) {
-						// console.log(`${key} => ${value}`);
 						if (value.value != value.current_camera_value) {
-							// message.setAttribute(key, value.value);				
-
-							//TODO ADD in special processers for checkboxes and radials values
-
-							message += key + " " + value.value + "\n";
-
-							// value.current_camera_value = value.value;
+							message += value.gphoto_name + " " + value.value + "\n";
 						}
 					}
 
@@ -447,16 +428,23 @@ class camera_config {
 					console.log('Error: ' + ajax_cmd.statusText);
 				}
 			});
+
+			ajax_cmd.onreadystatechange = function ()  {
+				if (ajax_cmd.readyState === 4) {
+					// The request is complete, so reset the button
+					submitButton.disabled = false;
+				}
+			}
 			ajax_cmd.open("POST", "gphoto_pipe.php", true);
 			ajax_cmd.setRequestHeader("Content-Type", "application/json");
-			// let json_config = JSON.stringify(message);
 			ajax_cmd.send(message);
+			
 			//Todo move this into a responce funciton
 			this.changedElements.clear();
-		})
+		}
+		)
 
 		submitButton.setAttribute("camera_config", this)
-
 		document.body.appendChild(submitButton);
 	}
 
