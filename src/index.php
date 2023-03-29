@@ -130,13 +130,17 @@ $userLevel =  getUserLevel($user);
     
       <div class="navbar navbar-inverse navbar-fixed-top" role="navigation" <?php getdisplayStyle('navbar', $userLevel); ?>>
       </div>
+
     <div id="main-buttons">
-        <input id="video_button" type="button" class="btn btn-primary" <?php getdisplayStyle('actions', $userLevel); ?>>
-        <input id="image_button" type="button" class="btn btn-primary" <?php getdisplayStyle('actions', $userLevel); ?>>
-        <input id="timelapse_button" type="button" class="btn btn-primary" <?php getdisplayStyle('actions', $userLevel); ?>>
-        <input id="md_button" type="button" class="btn btn-primary" <?php getdisplayStyle('settings', $userLevel); ?>>
-        <input id="halt_button" type="button" class="btn btn-danger" <?php getdisplayStyle('settings', $userLevel); ?>>
-    </div>
+		<img id="preview_image">
+		<input id="capture_preview" type="button" value="capture_preview" onclick="capture_preview()">
+		<input id="single_capture" type="button" value="capture_image" onclick="capture_image()">
+		<input id="timelapse_capture" type="button" value="capture timelapse" onclick="capture_timelapse()">
+
+		<label for="timelapse_delay">Timelapse Delay (in seconds):</label>
+		<input type="number" id="timelapse_delay" name="timelapse_delay" min="0.1" step="1" value="1">
+	
+	</div>
 </body>
 
 </html>

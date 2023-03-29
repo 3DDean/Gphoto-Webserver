@@ -484,6 +484,29 @@ function update_preview_delay() {
 	preview_delay = Math.floor(divider / Math.max(video_fps, 1) * 1000000);
 }
 
+function send_command(cmd)
+{
+	ajax_cmd.open("POST", "gphoto_pipe.php", true);
+	ajax_cmd.setRequestHeader("Content-Type", "application/json");
+	ajax_cmd.send(cmd);
+}
+
+function capture_preview()
+{
+	send_command("capture_preview");
+}
+
+function capture_image()
+{
+	send_command("capture");
+}
+
+function capture_timelapse()
+{
+	const delayInput = document.getElementById("timelapse_delay");
+	send_command("capture_timelapse " +  delayInput.value);
+}
+
 //
 // Init
 //
