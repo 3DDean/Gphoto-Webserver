@@ -125,14 +125,12 @@ $userLevel =  getUserLevel($user);
     <script src="js/gphoto2.js"></script>
 </head>
 
-<body onload="setTimeout('init();', 0);">
-    <?php echo '<p>Hello World</p>'; ?>
-    
+<body onload="setTimeout('init();', 0);"> 
       <div class="navbar navbar-inverse navbar-fixed-top" role="navigation" <?php getdisplayStyle('navbar', $userLevel); ?>>
       </div>
-
+	<img id="preview_image" src="capture_result.php" alt="Last Capture" height="400">
     <div id="main-buttons">
-		<img id="preview_image">
+		
 		<input id="capture_preview" type="button" value="capture_preview" onclick="capture_preview()">
 		<input id="single_capture" type="button" value="capture_image" onclick="capture_image()">
 		<input id="timelapse_capture" type="button" value="capture timelapse" onclick="capture_timelapse()">

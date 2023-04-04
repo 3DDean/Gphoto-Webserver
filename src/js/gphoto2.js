@@ -478,6 +478,15 @@ else {
 	ajax_cmd = new ActiveXObject("Microsoft.XMLHTTP");
 }
 
+let ajax_preview;
+
+if (window.XMLHttpRequest) {
+	ajax_preview = new XMLHttpRequest();
+}
+else {
+	ajax_preview = new ActiveXObject("Microsoft.XMLHTTP");
+}
+
 function update_preview_delay() {
 	let video_fps = parseInt(document.getElementById("video_fps").value);
 	let divider = parseInt(document.getElementById("divider").value);
@@ -486,7 +495,7 @@ function update_preview_delay() {
 
 function send_command(cmd)
 {
-	ajax_cmd.open("POST", "gphoto_pipe.php", true);
+	ajax_cmd.open("POST", "gphoto_command.php", true);
 	ajax_cmd.setRequestHeader("Content-Type", "application/json");
 	ajax_cmd.send(cmd);
 }
@@ -494,11 +503,38 @@ function send_command(cmd)
 function capture_preview()
 {
 	send_command("capture_preview");
+	
+	ajax_preview.open("GET", "capture_preview.php", true);
+	ajax_preview.send();
+	
+	ajax_preview.onreadystatechange = function ()  {
+		if (ajax_cmd.readyState === 4) {
+			// The request is complete, so reset the button
+			let capture = document.getElementById("preview_image")
+			capture.src = ajax_preview.response;
+		}
+	}
+
+}
+
+function load_last_caputre()
+{
+	ajax_preview.open("GET", "capture_result.php", true);
+	ajax_preview.send();
+	
+	ajax_preview.onreadystatechange = function ()  {
+		if (ajax_preview.readyState === 4) {
+			// The request is complete, so reset the button
+			let capture = document.getElementById("preview_image")
+			capture.src = window.location.href +'capture_result.php';
+		}
+	}
 }
 
 function capture_image()
 {
 	send_command("capture");
+	load_last_caputre()
 }
 
 function capture_timelapse()
