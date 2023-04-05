@@ -129,7 +129,9 @@ $userLevel =  getUserLevel($user);
       <div class="navbar navbar-inverse navbar-fixed-top" role="navigation" <?php getdisplayStyle('navbar', $userLevel); ?>>
       </div>
 	<img id="preview_image" src="capture_result.php" alt="Last Capture" height="400">
-    <div id="main-buttons">
+    
+	
+	<div id="main-buttons">
 		
 		<input id="capture_preview" type="button" value="capture_preview" onclick="capture_preview()">
 		<input id="single_capture" type="button" value="capture_image" onclick="capture_image()">
@@ -137,7 +139,13 @@ $userLevel =  getUserLevel($user);
 
 		<label for="timelapse_delay">Timelapse Delay (in seconds):</label>
 		<input type="number" id="timelapse_delay" name="timelapse_delay" min="0.1" step="1" value="1">
-	
+
+	</div>
+	<div>
+		<p id="Command_Response">
+	</div>
+
+	<div id="camera-config">
 	</div>
 </body>
 

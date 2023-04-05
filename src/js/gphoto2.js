@@ -276,176 +276,177 @@ function addListeners(xhr) {
 
 class camera_config {
 	constructor(text) {
-		let config_text = new file_processor(text);
+		if (text) {
+			let config_text = new file_processor(text);
 
-		const camera_name = config_text.get_line();
-		this.elements = [];
-		this.changedElements = new Map();;
-		let stack = [];
-		let indent = 0;
-		//TODO implement readonly element alternatives
-		//TODO improve formating, probably into a table
-		//TODO implement tabing for tab_pages
-		//TODO implement value loading
+			const camera_name = config_text.get_line();
+			this.elements = [];
+			this.changedElements = new Map();;
+			let stack = [];
+			let indent = 0;
+			//TODO implement readonly element alternatives
+			//TODO improve formating, probably into a table
+			//TODO implement tabing for tab_pages
+			//TODO implement value loading
 
-		while (config_text.next()) {
-			const widget = new gphoto_widget_helper(camera_name, config_text.get_line());
-			const html_name = widget.server_name;
-			let element;
-			let skip_finilization = false;
+			while (config_text.next()) {
+				const widget = new gphoto_widget_helper(camera_name, config_text.get_line());
+				const html_name = widget.server_name;
+				let element;
+				let skip_finilization = false;
 
-			if (indent > widget.indent) {
-				stack.pop();
-			}
-			indent = widget.indent;
-			let stack_top = get_back(stack)
-
-			if (widget.html_name != "") {
-				switch (widget.type) {
-					case "window":
-						element = new tab_book(widget.human_name)
-						stack.push(element)
-						skip_finilization = true;
-						break;
-					/**< \brief Section widget (think Tab) */
-					case "section":
-						element = new tab_page(stack_top, widget.human_name)
-						stack_top.appendChild(element)
-						stack.push(element.divider)
-
-						skip_finilization = true;
-						break;
-					/**< \brief Slider widget. */
-					case "range":
-						element = create_range_widget(config_text.get_next_line())
-						break;
-					/**< \brief Radio button widget. */
-					case "radio":
-						element = create_radio_widget(html_name, config_text.get_next_line())
-						break;
-					/**< \brief Menu widget (same as RADIO). */
-					case "menu":
-						element = create_menu_widget(config_text.get_next_line())
-						break;
-					/**< \brief Text widget. */
-					case "text":
-						element =
-							create_input_widget(
-								"text",
-								function (element, value) {
-									element.setAttribute("value", value)
-								}
-							)
-						break;
-					/**< \brief Toggle widget (think check box) */
-					case "toggle":
-						element =
-							create_input_widget(
-								"checkbox",
-								function (element, value) {
-									element.checked = value == "1"
-								}
-							)
-						break;
-					/**< \brief Button press widget. */
-					case "button":
-						element =
-							create_input_widget(
-								"button",
-								function (element, value) {
-
-								}
-							)
-						break;
-					/**< \brief Date entering widget. */
-					case "date":
-						element =
-							create_input_widget(
-								"date",
-								function (element, value) {
-									let d = new Date(0);
-									d.setUTCSeconds(value);
-									element.setAttribute("value", d.toString())
-								}
-							)
-						break;
-					default:
-						throw Error("Unrecognized Gphoto Widget");
+				if (indent > widget.indent) {
+					stack.pop();
 				}
+				indent = widget.indent;
+				let stack_top = get_back(stack)
 
-				//TODO integrate readonly property
-				set_attributes(element,
-					[
-						["id", html_name],
-						["label", widget.tooltip],
-						["name", widget.server_name]
-					])
-				element.gphoto_name = html_name
+				if (widget.html_name != "") {
+					switch (widget.type) {
+						case "window":
+							element = new tab_book(widget.human_name)
+							stack.push(element)
+							skip_finilization = true;
+							break;
+						/**< \brief Section widget (think Tab) */
+						case "section":
+							element = new tab_page(stack_top, widget.human_name)
+							stack_top.appendChild(element)
+							stack.push(element.divider)
 
-				if (!skip_finilization) {
-					element.addEventListener("change", (event) => {
-						this.changedElements.set(event.target.id, event.target);
-					});
+							skip_finilization = true;
+							break;
+						/**< \brief Slider widget. */
+						case "range":
+							element = create_range_widget(config_text.get_next_line())
+							break;
+						/**< \brief Radio button widget. */
+						case "radio":
+							element = create_radio_widget(html_name, config_text.get_next_line())
+							break;
+						/**< \brief Menu widget (same as RADIO). */
+						case "menu":
+							element = create_menu_widget(config_text.get_next_line())
+							break;
+						/**< \brief Text widget. */
+						case "text":
+							element =
+								create_input_widget(
+									"text",
+									function (element, value) {
+										element.setAttribute("value", value)
+									}
+								)
+							break;
+						/**< \brief Toggle widget (think check box) */
+						case "toggle":
+							element =
+								create_input_widget(
+									"checkbox",
+									function (element, value) {
+										element.checked = value == "1"
+									}
+								)
+							break;
+						/**< \brief Button press widget. */
+						case "button":
+							element =
+								create_input_widget(
+									"button",
+									function (element, value) {
 
-					let divider = document.createElement("div");
-
-					divider.appendChild(create_label(html_name, widget.human_name));
-					divider.appendChild(element);
-
-					get_back(stack).appendChild(divider);
-				}
-				this.elements.push(element);
-			}
-		}
-
-		const submitButton = document.createElement("button");
-		submitButton.type = "submit";
-		submitButton.textContent = "Submit";
-
-		submitButton.addEventListener("click", (event) => {
-			
-			submitButton.disabled = true;
-			
-			let message = "";
-			for (const [key, value] of this.changedElements) {
-				if (value.value != value.current_camera_value) {
-					message += value.gphoto_name + " " + value.value + "\n";
-				}
-			}
-			addListeners(ajax_cmd);
-
-			ajax_cmd.addEventListener('load', (event) => {
-				if (ajax_cmd.status === 200) {
-					for (const [key, value] of this.changedElements) {
-						if (value.value != value.current_camera_value) {
-							message += value.gphoto_name + " " + value.value + "\n";
-						}
+									}
+								)
+							break;
+						/**< \brief Date entering widget. */
+						case "date":
+							element =
+								create_input_widget(
+									"date",
+									function (element, value) {
+										let d = new Date(0);
+										d.setUTCSeconds(value);
+										element.setAttribute("value", d.toString())
+									}
+								)
+							break;
+						default:
+							throw Error("Unrecognized Gphoto Widget");
 					}
 
-					let response = ajax_cmd.responseText;
+					//TODO integrate readonly property
+					set_attributes(element,
+						[
+							["id", html_name],
+							["label", widget.tooltip],
+							["name", widget.server_name]
+						])
+					element.gphoto_name = html_name
 
-				} else {
-					console.log('Error: ' + ajax_cmd.statusText);
-				}
-			});
+					if (!skip_finilization) {
+						element.addEventListener("change", (event) => {
+							this.changedElements.set(event.target.id, event.target);
+						});
 
-			ajax_cmd.onreadystatechange = function ()  {
-				if (ajax_cmd.readyState === 4) {
-					// The request is complete, so reset the button
-					submitButton.disabled = false;
+						let divider = document.createElement("div");
+
+						divider.appendChild(create_label(html_name, widget.human_name));
+						divider.appendChild(element);
+
+						get_back(stack).appendChild(divider);
+					}
+					this.elements.push(element);
 				}
 			}
-			ajax_cmd.open("POST", "gphoto_pipe.php", true);
-			ajax_cmd.setRequestHeader("Content-Type", "application/json");
-			ajax_cmd.send(message);
-			
-			//Todo move this into a responce funciton
-			this.changedElements.clear();
-		}
-		)
 
-		submitButton.setAttribute("camera_config", this)
-		document.body.appendChild(submitButton);
+			const submitButton = document.createElement("button");
+			submitButton.type = "submit";
+			submitButton.textContent = "Submit";
+
+			submitButton.addEventListener("click", (event) => {
+				submitButton.disabled = true;
+
+				let message = "";
+				for (const [key, value] of this.changedElements) {
+					if (value.value != value.current_camera_value) {
+						message += value.gphoto_name + " " + value.value + "\n";
+					}
+				}
+				addListeners(ajax_cmd);
+
+				ajax_cmd.addEventListener('load', (event) => {
+					if (ajax_cmd.status === 200) {
+						for (const [key, value] of this.changedElements) {
+							if (value.value != value.current_camera_value) {
+								message += value.gphoto_name + " " + value.value + "\n";
+							}
+						}
+
+						let response = ajax_cmd.responseText;
+
+					} else {
+						console.log('Error: ' + ajax_cmd.statusText);
+					}
+				});
+
+				ajax_cmd.onreadystatechange = function () {
+					if (ajax_cmd.readyState === 4) {
+						// The request is complete, so reset the button
+						submitButton.disabled = false;
+					}
+				}
+				ajax_cmd.open("POST", "gphoto_pipe.php", true);
+				ajax_cmd.setRequestHeader("Content-Type", "application/json");
+				ajax_cmd.send(message);
+
+				//Todo move this into a responce funciton
+				this.changedElements.clear();
+			}
+			)
+
+			submitButton.setAttribute("camera_config", this)
+			document.body.appendChild(submitButton);
+		}
 	}
 
 	load_values(text) {
@@ -466,25 +467,31 @@ class camera_config {
 	}
 };
 
+function create_ajax_handle() {
+	if (window.XMLHttpRequest) {
+		return new XMLHttpRequest();
+	}
+	else {
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+}
+
 //
 // Ajax Commands
 //
-let ajax_cmd;
+let ajax_cmd = create_ajax_handle();
+let ajax_capture = create_ajax_handle();
 
-if (window.XMLHttpRequest) {
-	ajax_cmd = new XMLHttpRequest();
-}
-else {
-	ajax_cmd = new ActiveXObject("Microsoft.XMLHTTP");
-}
+ajax_capture.onreadystatechange = function () {
+	if (ajax_capture.readyState === 4) {
+		// The request is complete, so reset the button
+		let response_line = document.getElementById("Command_Response")
+		let responseText = ajax_capture.response;
+		response_line.textContent = responseText
 
-let ajax_preview;
-
-if (window.XMLHttpRequest) {
-	ajax_preview = new XMLHttpRequest();
-}
-else {
-	ajax_preview = new ActiveXObject("Microsoft.XMLHTTP");
+		let capture = document.getElementById("preview_image")
+		capture.src = window.location.href + 'get_image.php?image=' + responseText;
+	}
 }
 
 function update_preview_delay() {
@@ -493,54 +500,25 @@ function update_preview_delay() {
 	preview_delay = Math.floor(divider / Math.max(video_fps, 1) * 1000000);
 }
 
-function send_command(cmd)
-{
-	ajax_cmd.open("POST", "gphoto_command.php", true);
-	ajax_cmd.setRequestHeader("Content-Type", "application/json");
-	ajax_cmd.send(cmd);
-}
-
-function capture_preview()
-{
-	send_command("capture_preview");
-	
-	ajax_preview.open("GET", "capture_preview.php", true);
-	ajax_preview.send();
-	
-	ajax_preview.onreadystatechange = function ()  {
-		if (ajax_cmd.readyState === 4) {
-			// The request is complete, so reset the button
-			let capture = document.getElementById("preview_image")
-			capture.src = ajax_preview.response;
-		}
-	}
+function send_command(ajax, cmd) {
+	ajax.open("POST", "gphoto_command.php", true);
+	ajax.setRequestHeader("Content-Type", "application/json");
+	ajax.send(cmd);
 
 }
 
-function load_last_caputre()
-{
-	ajax_preview.open("GET", "capture_result.php", true);
-	ajax_preview.send();
-	
-	ajax_preview.onreadystatechange = function ()  {
-		if (ajax_preview.readyState === 4) {
-			// The request is complete, so reset the button
-			let capture = document.getElementById("preview_image")
-			capture.src = window.location.href +'capture_result.php';
-		}
-	}
+function capture_preview() {
+	send_command(ajax_capture ,"capture_preview");
+
 }
 
-function capture_image()
-{
-	send_command("capture");
-	load_last_caputre()
+function capture_image() {
+	send_command(ajax_capture, "capture");
 }
 
-function capture_timelapse()
-{
+function capture_timelapse() {
 	const delayInput = document.getElementById("timelapse_delay");
-	send_command("capture_timelapse " +  delayInput.value);
+	send_command("capture_timelapse " + delayInput.value);
 }
 
 //
