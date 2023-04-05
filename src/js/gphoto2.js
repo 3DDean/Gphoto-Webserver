@@ -435,7 +435,7 @@ class camera_config {
 						submitButton.disabled = false;
 					}
 				}
-				ajax_cmd.open("POST", "gphoto_pipe.php", true);
+				ajax_cmd.open("POST", "gphoto_command.php", true);
 				ajax_cmd.setRequestHeader("Content-Type", "application/json");
 				ajax_cmd.send(message);
 
@@ -509,7 +509,6 @@ function send_command(ajax, cmd) {
 
 function capture_preview() {
 	send_command(ajax_capture ,"capture_preview");
-
 }
 
 function capture_image() {
@@ -518,7 +517,7 @@ function capture_image() {
 
 function capture_timelapse() {
 	const delayInput = document.getElementById("timelapse_delay");
-	send_command("capture_timelapse " + delayInput.value);
+	send_command(ajax_cmd, "capture_timelapse " + delayInput.value);
 }
 
 //
